@@ -3,9 +3,9 @@ docker-starter
 
 Item            | Info
 --------------- | ---------------
-Project update  | 250413
-Project version | 3.1
-playSMS version | 1.4.8-2504120000
+Project update  | 250414
+Project version | 1.0
+Laravel Starter | 1.2.2
 
 This project is about docker for Laravel Starter.
 
@@ -20,7 +20,7 @@ First, create `.env` by copying from `.env.example`:
 cp .env.example .env
 ```
 
-Edit `.env` file, change DB password at least:
+Edit `.env` file, change DB password and admin password at least.
 
 ```
 vi .env
