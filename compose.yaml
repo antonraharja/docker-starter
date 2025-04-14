@@ -1,0 +1,61 @@
+services:
+  mariadb:
+    image: ${DOCKER_IMAGE_MARIADB}
+    environment:
+      MARIADB_RANDOM_ROOT_PASSWORD: 1
+      MARIADB_DATABASE: ${LARAVEL_STARTER_DB_NAME}
+      MARIADB_USER: ${LARAVEL_STARTER_DB_USER}
+      MARIADB_PASSWORD: ${LARAVEL_STARTER_DB_PASS}
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - starter-network
+    restart: unless-stopped
+
+  starter:
+    image: ${DOCKER_IMAGE_LARAVEL_STARTER}
+    environment: &starter_vars
+      - LARAVEL_STARTER_ADMIN_PASSWORD=${LARAVEL_STARTER_ADMIN_PASSWORD}
+      - LARAVEL_STARTER_VERSION=${LARAVEL_STARTER_VERSION}
+      - LARAVEL_STARTER_DB_NAME=${LARAVEL_STARTER_DB_NAME}
+      - LARAVEL_STARTER_DB_USER=${LARAVEL_STARTER_DB_USER}
+      - LARAVEL_STARTER_DB_PASS=${LARAVEL_STARTER_DB_PASS}
+      - LARAVEL_STARTER_DB_HOST=${LARAVEL_STARTER_DB_HOST}
+      - LARAVEL_STARTER_DB_PORT=${LARAVEL_STARTER_DB_PORT}
+      - PHP_FPM_PORT=${PHP_FPM_PORT}
+    build:
+      dockerfile: Dockerfile
+      args: *starter_vars
+    volumes:
+      - starter_web:/var/www/html
+    depends_on:
+      - mariadb
+    networks:
+      - starter-network
+
+  nginx:
+    image: ${DOCKER_IMAGE_NGINX}
+    environment:
+      - NGINX_HTTP_PORT=${NGINX_HTTP_PORT}
+      - NGINX_HTTPS_PORT=${NGINX_HTTPS_PORT}
+      - PHP_FPM_PORT=${PHP_FPM_PORT}
+    volumes:
+      - ./nginx/templates:/etc/nginx/templates
+      - ./nginx/ssl:/etc/nginx/ssl
+      - starter_web:/var/www/html
+    depends_on:
+      - starter
+    networks:
+      - starter-network
+    ports:
+      - "${NGINX_HTTP_PORT}:${NGINX_HTTP_PORT}"
+      - "${NGINX_HTTPS_PORT}:${NGINX_HTTPS_PORT}"
+    restart: unless-stopped
+
+networks:
+  starter-network:
+    driver: bridge
+
+volumes:
+  starter_web:
+  mariadb_data:
