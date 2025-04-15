@@ -27,11 +27,12 @@ services:
       dockerfile: Dockerfile
       args: *starter_vars
     volumes:
-      - starter_web:/var/www/html
+      - starter_web:/app/public
     depends_on:
       - mariadb
     networks:
       - starter-network
+    restart: unless-stopped
 
   nginx:
     image: ${DOCKER_IMAGE_NGINX}
@@ -39,6 +40,9 @@ services:
       - NGINX_HTTP_PORT=${NGINX_HTTP_PORT}
       - NGINX_HTTPS_PORT=${NGINX_HTTPS_PORT}
       - PHP_FPM_PORT=${PHP_FPM_PORT}
+    ports:
+      - "${NGINX_HTTP_PORT}:${NGINX_HTTP_PORT}"
+      - "${NGINX_HTTPS_PORT}:${NGINX_HTTPS_PORT}"
     volumes:
       - ./nginx/templates:/etc/nginx/templates
       - ./nginx/ssl:/etc/nginx/ssl
@@ -47,9 +51,6 @@ services:
       - starter
     networks:
       - starter-network
-    ports:
-      - "${NGINX_HTTP_PORT}:${NGINX_HTTP_PORT}"
-      - "${NGINX_HTTPS_PORT}:${NGINX_HTTPS_PORT}"
     restart: unless-stopped
 
 networks:

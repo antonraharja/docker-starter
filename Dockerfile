@@ -1,4 +1,4 @@
-FROM ubuntu:24.04
+FROM alpine:latest
 LABEL com.antonraharja.image.authors="araharja@protonmail.com"
 
 ARG LARAVEL_STARTER_ADMIN_PASSWORD
@@ -10,33 +10,29 @@ ARG LARAVEL_STARTER_DB_HOST
 ARG LARAVEL_STARTER_DB_PORT
 ARG PHP_FPM_PORT
 
-# Set environment variables
-ENV DEBIAN_FRONTEND=noninteractive
-
 # Install dependencies, prepare directories, and set up users in a single layer
-RUN apt-get -y update && apt-get -y upgrade && \
-    apt-get -yq install --no-install-recommends \
+RUN apk update && apk upgrade && \
+    apk add --no-cache \
     ca-certificates supervisor git unzip curl mariadb-client mc composer \
-    php8.3-fpm php8.3-cli php8.3-mysql php8.3-gd php8.3-curl php8.3-imap \
-    php8.3-zip php8.3-xml php8.3-mbstring && \
-    apt-get clean && rm -rf /var/lib/apt/lists/* && \
-    sed -i /etc/php/8.3/fpm/pool.d/www.conf -e "s/listen = \/run\/php\/php8.3-fpm.sock/listen = $PHP_FPM_PORT/"
+    php83-fpm php83-cli php83-mysqli php83-mysqlnd php83-pdo php83-pdo_mysql php83-pdo_sqlite \
+    php83-gd php83-curl php83-imap php83-zip php83-xml php83-xmlreader php83-xmlwriter php83-json php83-tokenizer \
+    php83-session php83-gettext php83-mbstring php83-pcntl php83-fileinfo php83-dom php83-intl php83-pecl-redis && \
+    rm -rf /tmp/* /var/cache/apk/* && \
+    sed -i /etc/php83/php-fpm.d/www.conf -e "s/listen = 127.0.0.1:9000/listen = 0.0.0.0:$PHP_FPM_PORT/"
 
 # get Laravel Starter
 RUN rm -rf /app && mkdir -p /app && \
-    git clone --branch $LARAVEL_STARTER_VERSION --depth=1 https://github.com/antonraharja/laravel-starter.git /app
-
-RUN mkdir -p /var/www/html && rm -rf /var/www/html && ln -s /app/public /var/www/html
+    git clone --branch $LARAVEL_STARTER_VERSION --depth=1 https://github.com/antonraharja/laravel-starter.git /app && \
+    mkdir -p /var/www/html && rm -rf /var/www/html && ln -s /app/public /var/www/html
 
 # Copy configuration files
 COPY /starter/docker-setup.sh /app/docker-setup.sh
 COPY /starter/.env.example /app/.env.example
-COPY /starter/runner_php-fpm.sh /runner_php-fpm.sh
-COPY /starter/supervisord-php-fpm.conf /etc/supervisor/conf.d/supervisord-php-fpm.conf
+COPY /starter/supervisor.conf /etc/supervisor.conf
 COPY /starter/run.sh /run.sh
 
 # Set permissions
-RUN chmod +x /app/docker-setup.sh /runner_php-fpm.sh /run.sh
+RUN chmod +x /app/docker-setup.sh /run.sh
 
 # Set entrypoint
 CMD ["/run.sh"]

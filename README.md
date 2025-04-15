@@ -3,8 +3,8 @@ docker-starter
 
 Item            | Info
 --------------- | ---------------
-Project update  | 250414
-Project version | 1.0
+Project update  | 250416
+Project version | 1.1
 Laravel Starter | 1.2.2
 
 This project is about docker for Laravel Starter.

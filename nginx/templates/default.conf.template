@@ -18,9 +18,19 @@ server {
     ssl_prefer_server_ciphers on;
     ssl_ciphers 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384';
     
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-Content-Type-Options "nosniff";
+    
+    charset utf-8;
+
     root /var/www/html;
     index index.php index.html;
     
+    error_page 404 /index.php;
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location = /robots.txt  { access_log off; log_not_found off; }
+
     location / {
         try_files $uri $uri/ /index.php?$query_string;
     }
@@ -28,7 +38,11 @@ server {
     location ~ \.php$ {
         fastcgi_pass starter:${PHP_FPM_PORT};
         fastcgi_index index.php;
-        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
         include fastcgi_params;
+        fastcgi_hide_header X-Powered-By;
+    }
+    location ~ /\.(?!well-known).* {
+        deny all;
     }
 }
